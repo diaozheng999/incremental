@@ -390,7 +390,7 @@
       {li [Incremental_unit_tests]. }
       } *)
 
-open Core_kernel
+open Base.Base
 open! Import
 
 module type Map_n_gen = sig
@@ -911,11 +911,11 @@ module type S_gen = sig
   module Packed : sig
     type t
 
-    val save_dot : string -> t list -> unit
+    val save_dot : (string -> 'a[@bs]) -> t list -> 'a
   end
 
   val pack : _ t -> Packed.t
-  val save_dot : string -> unit
+  val save_dot : (string -> 'a[@bs]) -> 'a
 
   module Let_syntax : sig
     val return : 'a -> 'a t
@@ -1651,13 +1651,13 @@ module type Incremental = sig
 
     (** [save_dot file ts] outputs to [file] the DAG of nodes in [ts] and all their
         descendants, in dot format. *)
-    val save_dot : string -> t list -> unit
+    val save_dot : (string -> 'a[@bs]) -> t list -> 'a
   end
 
   val pack : _ t -> Packed.t
 
   (** [save_dot file] outputs to [file] the DAG of all necessary nodes, in dot format. *)
-  val save_dot : _ State.t -> string -> unit
+  val save_dot : _ State.t -> (string -> 'a[@bs]) -> 'a
 
   (** This [Let_syntax] allows you to write expressions like
 

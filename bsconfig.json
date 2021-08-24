@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/rescript-lang/rescript-compiler/master/docs/docson/build-schema.json",
+  "name": "precisely",
+  "version": "0.1.0",
+  "sources": {
+    "dir" : "src",
+    "subdirs" : true
+  },
+  "package-specs": {
+    "module": "es6",
+    "in-source": true
+  },
+  "suffix": ".bs.js",
+  "bs-dependencies": [
+    "@nasi/js-sexplib0",
+    "@nasi/js-base"
+  ],
+  "warnings": {
+    "number": "-44",
+    "error" : "+101"
+  },
+  "ppx-flags": [
+    "ppx_let",
+    "ppx_base",
+    "ppx_custom_printf",
+    "ppx_sexp_conv",
+    "ppx_fields_conv",
+    "ppx_sexp_message",
+    "ppx_here",
+    "ppx_compare",
+    "ppx_hash",
+    "ppx_enumerate",
+    "ppx_assert",
+    "ppx_remove_deriving"
+  ],
+  "reason": {
+    "react-jsx": 3
+  },
+  "external-stdlib" : "@rescript/std"
+}

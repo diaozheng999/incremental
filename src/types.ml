@@ -8,7 +8,7 @@
    sexp converter that would try to produce an infinite sexp.
 *)
 
-open Core_kernel
+open Base.Base
 open Import
 
 module rec Adjust_heights_heap : sig

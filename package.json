@@ -1,0 +1,13 @@
+{
+  "name": "@nasi/incremental",
+  "version": "0.1.0",
+  "dependencies": {
+    "@nasi/js-base": "diaozheng999/base#af0a455",
+    "@nasi/js-sexplib0": "0.0.0-unstable.2",
+    "@rescript/std": "diaozheng999/melange-stdlib",
+    "yallist": "^4.0.0"
+  },
+  "devDependencies": {
+    "esy": "^0.6.10"
+  }
+}

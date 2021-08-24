@@ -24,7 +24,7 @@
     not guaranteed to be stable when [t.lhs] fires (but it is guaranteed to be stable when
     [t.lhs_change] fires). *)
 
-open! Core_kernel
+open! Base.Base
 open! Import
 
 include module type of struct

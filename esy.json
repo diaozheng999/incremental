@@ -1,0 +1,34 @@
+{
+  "dependencies": {
+    "ocaml": "4.12.x",
+    "@opam/dune": "~2.9.0",
+    "@opam/reason": "*",
+    "@opam/ppx_let": "v0.14.0",
+    "@opam/ppx_base": "*",
+    "@opam/ppx_custom_printf": "*",
+    "@opam/ppx_here": "*",
+    "@opam/ppx_compare": "*",
+    "@opam/ppx_sexp_conv": "*",
+    "@opam/ppx_hash": "*",
+    "@opam/ppx_sexp_message": "*",
+    "@opam/ppx_enumerate": "*",
+    "@opam/ppx_fields_conv": "*",
+    "@opam/ppx_assert": "*",
+    "@nasi/ppx-remove-deriving": "~0.1.2",
+    "melange": "melange-re/melange"
+  },
+  "devDependencies": {
+    "@opam/ocamlformat": "0.18.0",
+    "@opam/ocaml-lsp-server": "1.7.0"
+  },
+  "esy": {
+    "buildsInSource": "unsafe",
+    "build": "bsb -make-world"
+  },
+  "installConfig": {
+    "pnp": false
+  },
+  "resolutions": {
+    "melange": "github:diaozheng999/melange#4255ba864d1d1c7622e6653427651dc20414af44"
+  }
+}

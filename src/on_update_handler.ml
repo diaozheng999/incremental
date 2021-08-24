@@ -1,4 +1,4 @@
-open! Core_kernel
+open! Base.Base
 open! Import
 
 module Previous_update_kind = struct

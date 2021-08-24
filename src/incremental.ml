@@ -1,6 +1,6 @@
 (* This module is mostly a wrapper around [State] functions. *)
 
-open! Core_kernel
+open! Base.Base
 open! Import
 include Incremental_intf
 
@@ -96,12 +96,14 @@ module Generic = struct
 
   module Unordered_array_fold_update = State.Unordered_array_fold_update
 
+  let create_tuple a b = a, b
+
   let unordered_array_fold = State.unordered_array_fold
   let opt_unordered_array_fold = State.opt_unordered_array_fold
   let all = State.all
   let exists = State.exists
   let for_all = State.for_all
-  let both t1 t2 = map2 t1 t2 ~f:Tuple2.create
+  let both t1 t2 = map2 t1 t2 ~f:create_tuple
   let sum = State.sum
   let opt_sum = State.opt_sum
   let sum_int = State.sum_int
@@ -160,7 +162,7 @@ module Generic = struct
         let uopt = !t.observing.value_opt in
         if Uopt.is_none uopt
         then [%message "<invalid>"]
-        else [%sexp (Uopt.unsafe_value uopt : a)]
+        else Uopt.unsafe_value uopt |> [%sexp_of : a]
     ;;
   end
 

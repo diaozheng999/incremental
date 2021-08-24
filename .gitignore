@@ -3,3 +3,10 @@ _build
 *.merlin
 _opam
 
+node_modules
+
+.vscode
+_esy
+dune.bsb
+.melange.eobjs
+*.bs.js

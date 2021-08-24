@@ -4,7 +4,7 @@
    This module does not have an mli because it would essentially duplicate
    [Incremental.S], except adding an extra [State.t] argument to functions. *)
 
-open Core_kernel
+open Base.Base
 open Import
 open Types.Kind
 
@@ -333,21 +333,21 @@ let ensure_not_stabilizing t ~name ~allow_in_update_handler =
       let backtrace = Backtrace.get () in
       failwiths
         ~here:[%here]
-        (sprintf "cannot %s during on-update handlers" name)
+        (Format.sprintf "cannot %s during on-update handlers" name)
         backtrace
         [%sexp_of: Backtrace.t])
   | Stabilize_previously_raised raised_exn ->
     let backtrace = Backtrace.get () in
     failwiths
       ~here:[%here]
-      (sprintf "cannot %s -- stabilize previously raised" name)
+      (Format.sprintf "cannot %s -- stabilize previously raised" name)
       (raised_exn, backtrace)
       [%sexp_of: Raised_exn.t * Backtrace.t]
   | Stabilizing ->
     let backtrace = Backtrace.get () in
     failwiths
       ~here:[%here]
-      (sprintf "cannot %s during stabilization" name)
+      (Format.sprintf "cannot %s during stabilization" name)
       backtrace
       [%sexp_of: Backtrace.t]
 ;;
@@ -1198,10 +1198,14 @@ let disallow_finalized_observers t =
 ;;
 
 let observer_finalizer t =
-  stage (fun observer ->
+  Staged.stage (fun observer ->
     let internal_observer = !observer in
     Thread_safe_queue.enqueue t.finalized_observers (T internal_observer))
 ;;
+
+let observer_finalizer = Finalization_registry.make (
+  fun [@bs] (t, observer) ->
+    Thread_safe_queue.enqueue t.finalized_observers observer)
 
 let create_observer ?(should_finalize = true) (observing : _ Node.t) =
   let t = observing.state in
@@ -1217,8 +1221,8 @@ let create_observer ?(should_finalize = true) (observing : _ Node.t) =
   in
   Stack.push t.new_observers (T internal_observer);
   let observer = ref internal_observer in
-  if should_finalize
-  then Gc.Expert.add_finalizer_exn observer (unstage (observer_finalizer t));
+  if should_finalize && not Finalization_registry.is_virtualized
+  then Finalization_registry.register observer_finalizer observer (t, (T internal_observer));
   t.num_active_observers <- t.num_active_observers + 1;
   observer
 ;;
@@ -1488,7 +1492,8 @@ let necessary_if_alive input =
   let observer = create_observer input in
   let output =
     map input ~f:(fun a ->
-      Gc.keep_alive observer;
+      (* Melange: not yet figured out how different GCs on JS handle this. *)
+      (* Gc.keep_alive observer; *)
       a)
   in
   preserve_cutoff ~input ~output;
@@ -1595,7 +1600,7 @@ let memoize_fun_by_key
      [table] as having been created then, when it in reality is created on-demand. *)
   let scope = t.current_scope in
   let table = Hashtbl.create hashable ~size:initial_size in
-  stage (fun a ->
+  Staged.stage (fun a ->
     let key = project_key a in
     match Hashtbl.find table key with
     | Some b -> b
@@ -1925,7 +1930,7 @@ let weak_memoize_fun_by_key
   let packed = Packed_weak_hashtbl.T table in
   Weak_hashtbl.set_run_when_unused_data table ~thread_safe_f:(fun () ->
     Thread_safe_queue.enqueue t.weak_hashtbls packed);
-  stage (fun a ->
+  Staged.stage (fun a ->
     let key = project_key a in
     match Weak_hashtbl.find table key with
     | Some b -> b
@@ -1943,7 +1948,10 @@ module Expert = struct
     match node.kind with
     | Expert e -> Uopt.some e
     | Invalid -> Uopt.none
-    | kind -> raise_s [%sexp "unexpected kind for expert node", (kind : _ Kind.t)]
+    | kind ->
+        ("unexpected kind for expert node", kind)
+          |> [%sexp_of : string * _ Kind.t]
+          |> raise_s
   ;;
 
   let create state ~on_observability_change f =
@@ -1961,7 +1969,9 @@ module Expert = struct
   let currently_running_node_exn state name =
     match state.only_in_debug.currently_running_node with
     | None ->
-      raise_s [%sexp ("can only call " ^ name ^ " during stabilization" : string)]
+        ("can only call " ^ name ^ " during stabilization")
+          |> [%sexp_of : string]
+          |> raise_s
     | Some current -> current
   ;;
 
@@ -1972,22 +1982,18 @@ module Expert = struct
     let (T current) = currently_running_node_exn state name in
     if not (Node.has_child node ~child:current)
     then
-      raise_s
-        [%sexp
-          ("can only call " ^ name ^ " on parent nodes" : string)
-        , ~~(node.kind : _ Kind.t)
-        , ~~(current.kind : _ Kind.t)]
-  ;;
+      ("can only call " ^ name ^ " on parent nodes", node.kind, current.kind)
+        |> [%sexp_of : string * _ Kind.t * _ Kind.t]
+        |> raise_s
+  ;; 
 
   let assert_currently_running_node_is_parent state node name =
     let (T current) = currently_running_node_exn state name in
     if not (Node.has_parent ~parent:current node)
     then
-      raise_s
-        [%sexp
-          ("can only call " ^ name ^ " on children nodes" : string)
-        , ~~(node.kind : _ Kind.t)
-        , ~~(current.kind : _ Kind.t)]
+      ("can only call " ^ name ^ " on children nodes", node.kind, current.kind)
+        |> [%sexp_of : string * _ Kind.t * _ Kind.t]
+        |> raise_s
   ;;
 
   let make_stale (node : _ Node.t) =

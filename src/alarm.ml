@@ -1,4 +1,4 @@
-open! Core_kernel
+open! Base.Base
 open! Import
 module Alarm = Timing_wheel.Alarm
 

@@ -6,7 +6,7 @@
     future use of the observer if it has no on-update handlers, so even if user code uses
     a finalizer to resurrect the observer, it will still have [not (use_is_allowed t)]. *)
 
-open! Core_kernel
+open! Base.Base
 open! Import
 
 include module type of struct

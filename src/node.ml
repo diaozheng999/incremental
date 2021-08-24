@@ -1,4 +1,4 @@
-open Core_kernel
+open Base.Base
 open Import
 open Kind
 module Internal_observer = Types.Internal_observer
@@ -650,9 +650,9 @@ module Packed = struct
   let iter_descendants_internal ts ~f =
     let seen = Node_id.Hash_set.create () in
     let rec iter_descendants (T t) =
-      if not (Hash_set.mem seen t.id)
+      if not (Node_id.Hash_set.mem seen t.id)
       then (
-        Hash_set.add seen t.id;
+        Node_id.Hash_set.add seen t.id;
         f (T t);
         iteri_children t ~f:(fun _ t -> iter_descendants t))
     in
@@ -660,36 +660,44 @@ module Packed = struct
     seen
   ;;
 
-  let iter_descendants ts ~f = ignore (iter_descendants_internal ts ~f : _ Hash_set.t)
+  let iter_descendants ts ~f = ignore (iter_descendants_internal ts ~f : Node_id.Hash_set.set)
 
-  let save_dot file ts =
-    Out_channel.with_file file ~f:(fun out ->
-      let node_name node = "n" ^ Node_id.to_string node.id in
-      fprintf out "digraph G {\n";
-      fprintf out "  rankdir = BT\n";
-      let bind_edges = ref [] in
-      let seen =
-        iter_descendants_internal ts ~f:(fun (T t) ->
-          let name = node_name t in
-          fprintf
-            out
-            "  %s [label=\"%s %s\\nheight = %d\"]\n"
-            name
-            name
-            (Kind.name t.kind)
-            t.height;
-          iteri_children t ~f:(fun _ (T from_) ->
-            fprintf out "  %s -> %s\n" (node_name from_) name);
-          match t.kind with
-          | Bind_lhs_change bind ->
-            Bind.iter_nodes_created_on_rhs bind ~f:(fun to_ ->
-              bind_edges := (T t, to_) :: !bind_edges)
-          | _ -> ())
-      in
-      List.iter !bind_edges ~f:(fun (T from, T to_) ->
-        if Hash_set.mem seen to_.id
-        then
-          fprintf out "  %s -> %s [style=dashed]\n" (node_name from) (node_name to_));
-      fprintf out "}\n%!")
+  external push : 'a array -> 'a -> unit = "push" [@@bs.send]
+
+  let save_dot next ts =
+    let buffer = [||] in
+
+    let node_name node = "n" ^ Node_id.to_string node.id in
+    Format.ksprintf (push buffer) "digraph G {\n";
+    Format.ksprintf (push buffer) "  rankdir = BT\n";
+    let bind_edges = ref [] in
+    let seen =
+      iter_descendants_internal ts ~f:(fun (T t) ->
+        let name = node_name t in
+        Format.ksprintf
+          (push buffer)
+          "  %s [label=\"%s %s\\nheight = %d\"]\n"
+          name
+          name
+          (Kind.name t.kind)
+          t.height;
+        iteri_children t ~f:(fun _ (T from_) ->
+          Format.ksprintf (push buffer) "  %s -> %s\n" (node_name from_) name);
+        match t.kind with
+        | Bind_lhs_change bind ->
+          Bind.iter_nodes_created_on_rhs bind ~f:(fun to_ ->
+            bind_edges := (T t, to_) :: !bind_edges)
+        | _ -> ())
+    in
+    List.iter !bind_edges ~f:(fun (T from, T to_) ->
+      if Node_id.Hash_set.mem seen to_.id
+      then
+        Format.ksprintf
+          (push buffer)
+          "  %s -> %s [style=dashed]\n"
+          (node_name from)
+          (node_name to_));
+      Format.ksprintf (push buffer) "}\n%!";
+    next (Js.Array2.joinWith buffer "") [@bs]
   ;;
 end

@@ -2,13 +2,19 @@
 
     Node ids are consecutive integers assigned to nodes as they are created. *)
 
-open! Core_kernel
+open! Base.Base
 open! Import
 
 type t = private int [@@deriving compare, sexp_of]
 
-include Hashable with type t := t
 include Invariant.S with type t := t
+
+module Hash_set : sig
+    type set
+    external create : unit -> set = "Set" [@@bs.new]
+    external mem : set -> t -> bool = "has" [@@bs.send]
+    external add : set -> t -> unit = "add" [@@bs.send]
+end
 
 val next : unit -> t
 val to_string : t -> string

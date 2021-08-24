@@ -12,7 +12,7 @@
     if [is_necessary t], then [t.recomputed_at >= c.changed_at] for all children [c] of
     [t].  I.e. it implies that all necessary nodes aren't stale. *)
 
-open! Core_kernel
+open! Base.Base
 open! Import
 
 (** For performance reasons, we do not use an OCaml existential type for [Node.Packed.t]:
@@ -50,7 +50,7 @@ module Packed : sig
       descendants exactly once per node. *)
   val iter_descendants : t list -> f:(t -> unit) -> unit
 
-  val save_dot : string -> t list -> unit
+  val save_dot : (string -> 'a[@bs]) -> t list -> 'a
 end
 
 include module type of struct
