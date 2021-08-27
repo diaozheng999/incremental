@@ -36,9 +36,9 @@ external dequeue_exn : 'a t -> 'a = "shift" [@@bs.send]
 
 (* val clear_internal_pool : _ t -> unit *)
 
-external tail : 'a t -> 'a node Js.nullable = "tail" [@@bs.send]
+external tail : 'a t -> 'a node Js.nullable = "tail" [@@bs.get]
 
-external head : 'a t -> 'a node Js.nullable = "head" [@@bs.send]
+external head : 'a t -> 'a node Js.nullable = "head" [@@bs.get]
 
 let rec sexp_of_node sexp_of_a node acc =
   match Js.Nullable.toOption node with
