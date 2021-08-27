@@ -268,6 +268,7 @@ let iter_observers t ~f = fold_observers t ~init:() ~f:(fun () observer -> f obs
 
 let invariant (type a) (invariant_a : a -> unit) (t : a t) =
   Invariant.invariant [%here] t [%sexp_of: _ t] (fun () ->
+    try 
     [%test_eq: bool] (needs_to_be_computed t) (is_in_recompute_heap t);
     if is_necessary t
     then (
@@ -410,7 +411,8 @@ let invariant (type a) (invariant_a : a -> unit) (t : a t) =
                     parent.kind
                     ~index:my_child_index_in_parent_at_index.(parent_index))))))
       ~force_necessary:ignore
-      ~creation_backtrace:ignore)
+      ~creation_backtrace:ignore
+           with e -> Js_error.raise_with_js_passthrough e)
 ;;
 
 let unsafe_value t = Uopt.unsafe_value t.value_opt
