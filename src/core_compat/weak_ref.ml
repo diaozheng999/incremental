@@ -76,7 +76,7 @@ let decide (type t) =
   let virtualized : (module Unsafe with type t = unsafe_ptr) =
     (module Virtualized)
   in
-  if Js.typeof js_weak_ref_ctor == "undefined" then native
+  if Js.typeof js_weak_ref_ctor != "undefined" then native
   else
     let () =
       Js.Console.warn

@@ -80,7 +80,7 @@ let decide =
     (module Virtualized)
   in
 
-  if Js.typeof js_finalization_registry_ctor == "undefined" then native
+  if Js.typeof js_finalization_registry_ctor != "undefined" then native
   else
     let () =
       Js.Console.warn
