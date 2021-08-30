@@ -19,3 +19,12 @@ val phys_equal : _ t
 val poly_equal : _ t
 val equal : 'a t -> 'a t -> bool
 val should_cutoff : 'a t -> old_value:'a -> new_value:'a -> bool
+
+module Js : sig
+    val uncurried : (('a -> 'a -> bool)[@bs]) -> 'a t
+
+    val equal : 'a t
+
+    val is : 'a t
+
+end

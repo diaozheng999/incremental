@@ -859,6 +859,16 @@ module type S_gen = sig
     val poly_equal : _ t
     val should_cutoff : 'a t -> old_value:'a -> new_value:'a -> bool
     val equal : 'a t -> 'a t -> bool
+
+    module Js : sig
+      val uncurried : (('a -> 'a -> bool)[@bs]) -> 'a t
+  
+      val equal : 'a t
+  
+      val is : 'a t
+    
+    end
+  
   end
 
   val set_cutoff : 'a t -> 'a Cutoff.t -> unit

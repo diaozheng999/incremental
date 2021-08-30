@@ -11,13 +11,21 @@ type 'a t =
   | Compare of ('a -> 'a -> int)
   | Equal of ('a -> 'a -> bool)
   | F of (old_value:'a -> new_value:'a -> bool)
+  | Js_uncurried of (('a -> 'a -> bool)[@bs])
+  | Js_equal
+  | Js_is
 [@@deriving sexp_of]
 
 let invariant _ t =
   Invariant.invariant [%here] t [%sexp_of: _ t] (fun () ->
-    match t with
-    | Always | Never | Phys_equal | Compare _ | Equal _ | F _ -> ())
+      match t with
+      | Always | Never | Phys_equal | Compare _ | Equal _ | F _ | Js_uncurried _ 
+      | Js_equal | Js_is | Js_prim -> ())
 ;;
+
+external js_equal : 'a -> 'a -> bool = "%eq"
+
+external js_is : 'a -> 'a -> bool = "is" [@@bs.val][@@bs.scope "Object"]
 
 let create f = F f
 let of_compare f = Compare f
@@ -34,6 +42,9 @@ let should_cutoff t ~old_value ~new_value =
   | Compare f -> f old_value new_value = 0
   | Equal f -> f old_value new_value
   | F f -> f ~old_value ~new_value
+  | Js_uncurried f -> f old_value new_value [@bs]
+  | Js_equal -> js_equal old_value new_value
+  | Js_is -> js_is old_value new_value
 ;;
 
 let equal t1 t2 =
@@ -50,6 +61,21 @@ let equal t1 t2 =
   | Equal _, _ -> false
   | F f1, F f2 -> phys_equal f1 f2
   | F _, _ -> false
+  | Js_uncurried f1, Js_uncurried f2 -> phys_equal f1 f2
+  | Js_uncurried _, _ -> false
+  | Js_equal, Js_equal -> true
+  | Js_equal, _ -> false
+  | Js_is, Js_is -> true
+  | Js_is, _ -> false
 ;;
 
 let phys_equal = Phys_equal
+
+module Js = struct
+  let uncurried f = Js_uncurried f
+
+  let is = Js_is
+
+  let equal = Js_equal
+
+end
