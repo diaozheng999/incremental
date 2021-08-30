@@ -20,7 +20,7 @@ let invariant _ t =
   Invariant.invariant [%here] t [%sexp_of: _ t] (fun () ->
       match t with
       | Always | Never | Phys_equal | Compare _ | Equal _ | F _ | Js_uncurried _ 
-      | Js_equal | Js_is | Js_prim -> ())
+      | Js_equal | Js_is -> ())
 ;;
 
 external js_equal : 'a -> 'a -> bool = "%eq"
