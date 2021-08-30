@@ -372,12 +372,15 @@ let invariant (type a) (invariant_a : a -> unit) (t : a t) =
                t.height_in_adjust_heights_heap = next.height_in_adjust_heights_heap))))
       ~old_value_opt:(check (Uopt.invariant invariant_a))
       ~observers:
+        (try
         (check (fun _ ->
            iter_observers t ~f:(fun { state; observing; _ } ->
              assert (phys_equal t observing);
              match state with
              | In_use | Disallowed -> ()
              | Created | Unlinked -> assert false)))
+        with e -> Js_error.raise_with_js_passthrough_m ~message:"Invariant failed in node.observers" e
+        )
       ~is_in_handle_after_stabilization:ignore
       ~on_update_handlers:ignore
       ~user_info:ignore

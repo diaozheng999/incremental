@@ -33,7 +33,7 @@ end
 
 module Alarm_precision = Timing_wheel.Alarm_precision
 
-external phys_same : 'a -> 'b -> bool = "%equal"
+external phys_same : 'a -> 'b -> bool = "%eq"
 
 let with_return = With_return.with_return
 
