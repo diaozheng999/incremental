@@ -7,7 +7,7 @@ include Int
    the production and debug lib, and users can choose to build with the debug library, if
    they suspect they found a bug in incremental. *)
 
-let debug = true
+let debug = false
 
 let concat = String.concat
 let tag name a sexp_of_a = (name, a) |> [%sexp_of: string * a]
