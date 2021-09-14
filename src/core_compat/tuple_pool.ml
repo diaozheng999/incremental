@@ -639,7 +639,9 @@ module Pool = struct
     | None ->
       let pos = Pointer.first_slot_index pointer in
       for i = 0 to metadata.slots_per_tuple - 1 do
-        Uniform_array.unsafe_clear_if_pointer t (pos + i)
+        (* A hacky workaround for Melange (4.12) while keeping compatibility with
+           ReScript (4.06) *)
+        Uniform_array.unsafe_clear_if_pointer (Obj.magic t) (pos + i)
       done
     | Some dummy ->
       Uniform_array.unsafe_blit
